@@ -6,8 +6,8 @@ Teaching a 2D biped (MuJoCo Walker2d) to walk with reinforcement learning.
 
 ## Before and after
 
-| Random policy | PPO, 1M steps |
-| --- | --- |
+| Random policy | PPO, 1M steps | PPO, normalization |
+| --- | --- | --- |
 | ![Before](videos/before.gif) | ![After](videos/after.gif) | ![After normalization](videos/after_improved.gif) |
 
 First: an untrained robot falls in under a second.
@@ -32,7 +32,7 @@ Third: using PPO and observation/reward normalization, it moves at 4.1 m/s, and 
 Mean return over 10 evaluation episodes (deterministic policy).
 
 | Policy | Return | Episode length | Speed | Falls |
-| --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | Random policy | 0.1 +/- 5.2 | 19 steps | - | 10/10 |
 | PPO, default settings, 1M steps | 1465.6 +/- 200.4 | 446 steps | 2.29 m/s | 10/10 |
 | PPO + observation/reward normalization | 4950.0 +/- 991.0 | 960 steps |  4.12 m/s | 1/10 |
