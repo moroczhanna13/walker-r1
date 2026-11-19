@@ -10,9 +10,12 @@ parser.add_argument("--env", default="Walker2d-v5")
 parser.add_argument("--model", default=None, help="mentett modell; ha nincs, véletlen stratégia")
 parser.add_argument("--out", default="videos/out.gif")
 parser.add_argument("--steps", type=int, default=300, help="legfeljebb ennyi lépést vesz fel")
+parser.add_argument("--camera", default=None, help="kamera neve; a Walker2d-nél 'track' követi a robotot")
 args = parser.parse_args()
 
-env = gym.make(args.env, render_mode="rgb_array")
+
+camera = {"camera_name": args.camera} if args.camera else {}
+env = gym.make(args.env, render_mode="rgb_array", **camera)
 model = PPO.load(args.model) if args.model else None
 
 frames = []
