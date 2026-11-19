@@ -1,9 +1,10 @@
 import argparse
+from email import policy
 import os
 
 import gymnasium as gym
 import imageio
-from stable_baselines3 import PPO
+from common import load_policy
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--env", default="Walker2d-v5")
@@ -16,15 +17,15 @@ args = parser.parse_args()
 
 camera = {"camera_name": args.camera} if args.camera else {}
 env = gym.make(args.env, render_mode="rgb_array", **camera)
-model = PPO.load(args.model) if args.model else None
+policy = load_policy(args.model, args.env) if args.model else None
 
 frames = []
 obs, info = env.reset(seed=0)
 for step in range(args.steps):
-    if model is None:
+    if policy is None:
         action = env.action_space.sample()
     else:
-        action, _ = model.predict(obs, deterministic=True)
+        action = policy(obs)
     obs, reward, terminated, truncated, info = env.step(action)
     frames.append(env.render())
     if terminated or truncated:

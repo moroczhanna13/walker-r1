@@ -1,10 +1,11 @@
 import argparse
+from email import policy
 
 import gymnasium as gym
 import numpy as np
-from stable_baselines3 import PPO
+from common import load_policy
 
-#Lefuttat `episodes` db epizódot, és visszaadja az összjutalmakat és a hosszakat
+#Lefuttat episodes db epizódot, és visszaadja az összjutalmakat és a hosszakat
 #Ha model=None, véletlen akciókat használ (kiinduló érték)
 def evaluate(env_id, model=None, episodes=10):
     env = gym.make(env_id)
@@ -18,7 +19,7 @@ def evaluate(env_id, model=None, episodes=10):
             if model is None:
                 action = env.action_space.sample()
             else:
-                action, _ = model.predict(obs, deterministic=True)
+                action = policy(obs)
             obs, reward, terminated, truncated, info = env.step(action)
             total_reward += reward
             steps += 1
@@ -38,8 +39,8 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=10)
     args = parser.parse_args()
 
-    model = PPO.load(args.model) if args.model else None
-    returns, lengths = evaluate(args.env, model, args.episodes)
+    policy = load_policy(args.model, args.env) if args.model else None
+    returns, lengths = evaluate(args.env, policy, args.episodes)
 
     name = args.model if args.model else "véletlen stratégia"
     print(f"Környezet: {args.env} | Stratégia: {name} | Epizódok: {args.episodes}")

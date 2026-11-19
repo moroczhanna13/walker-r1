@@ -1,8 +1,9 @@
 import argparse
+from email import policy
 
 import gymnasium as gym
 import numpy as np
-from stable_baselines3 import PPO
+from common import load_policy
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", required=True)
@@ -10,7 +11,7 @@ parser.add_argument("--episodes", type=int, default=10)
 args = parser.parse_args()
 
 env = gym.make("Walker2d-v5")
-model = PPO.load(args.model)
+policy = load_policy(args.model, "Walker2d-v5")
 
 speeds, distances, lengths, efforts, falls = [], [], [], [], 0
 
@@ -18,7 +19,7 @@ for episode in range(args.episodes):
     obs, info = env.reset(seed=1000 + episode)
     steps, done = 0, False
     while not done:
-        action, _ = model.predict(obs, deterministic=True)
+        action = policy(obs)
         obs, reward, terminated, truncated, info = env.step(action)
         speeds.append(info["x_velocity"])          # pillanatnyi sebesség előre (m/s)
         efforts.append(np.abs(action).mean())      # mennyire hajtja a motorokat (0..1)
