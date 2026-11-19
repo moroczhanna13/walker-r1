@@ -21,3 +21,6 @@ An untrained robot taking random actions falls over in under a second.
 - [ ] First PPO training
 - [ ] Tuned PPO, PPO vs SAC
 - [ ] Own experiment
+
+## Results
+Random policy | 0.1 +/- 5.2 | 19 lépés
