@@ -1,7 +1,7 @@
 import argparse
 import time
 
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.callbacks import BaseCallback, EvalCallback
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecNormalize
@@ -42,6 +42,8 @@ parser.add_argument("--name", default="walker_ppo", help="a futtatás neve: ez l
 parser.add_argument("--n-envs", type=int, default=1, help="párhuzamos környezetek száma")
 parser.add_argument("--normalize", action="store_true", help="megfigyelések és jutalom normalizálása")
 parser.add_argument("--zoo", action="store_true", help="az RL Zoo hangolt hiperparaméterei")
+parser.add_argument("--algo", default="ppo", choices=["ppo", "sac"], help="melyik algoritmus tanítson")
+parser.add_argument("--eval-freq", type=int, default=50_000, help="hány lépésenként legyen kiértékelés")
 args = parser.parse_args()
 
 # Tanító környezet: n_envs darab párhuzamos példány
@@ -54,13 +56,17 @@ if args.normalize:
     # Kiértékeléskor a statisztikák nem frissülnek, és a valódi jutalmat mérjük
     eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=False, training=False)
 
-params = ZOO_PARAMS if args.zoo else {}
-model = PPO("MlpPolicy", env, verbose=1, seed=args.seed, tensorboard_log="logs", **params)
+if args.algo == "ppo":
+    params = ZOO_PARAMS if args.zoo else {}
+    model = PPO("MlpPolicy", env, verbose=1, seed=args.seed, tensorboard_log="logs", **params)
+else:
+    # SAC: az első 10 ezer lépésben csak véletlenül mozog, és gyűjti a tapasztalatot
+    model = SAC("MlpPolicy", env, verbose=1, seed=args.seed, tensorboard_log="logs", learning_starts=10_000)
 
 # 50 ezer lépésenként 10 epizódos kiértékelés; a legjobb modellt megtartja
 evaluation = EvalCallback(
     eval_env,
-    eval_freq=50_000 // args.n_envs,
+    eval_freq=args.eval_freq // args.n_envs,
     n_eval_episodes=10,
     deterministic=True,
     best_model_save_path=f"models/{args.name}_best",
