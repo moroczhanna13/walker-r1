@@ -2,7 +2,7 @@
 
 Teaching a 2D biped (MuJoCo Walker2d) to walk with reinforcement learning.
 
-**Status:** work in progress (step 5 of 8)
+**Status:** work in progress (step 6 of 8)
 
 ## Before and after
 
@@ -37,13 +37,22 @@ Get a graph with the results:
 
     python plot_results.py
 
+Test the robustness of a model:
+
+    robustness_test.py
+
+Train with 150N pushes, 4 environment, 2M steps:
+
+    python train.py --normalize --n-envs 4 --timesteps 2000000 --push 150 --push-interval 50 --seed 1 --name pushB150_s1
+
 ## Roadmap
 
 - [x] Environment setup, random-policy baseline
 - [x] First PPO training
 - [x] Tuned PPO
 - [x] PPO vs SAC
-- [ ] Own experiment
+- [x] Push robustness
+- [ ] Domain randomization
 
 ## Results
 
@@ -80,3 +89,33 @@ Best-model return over 20 evaluation episodes, mean ± std across 3 seeds.
 
 Limitations: only 3 seeds per algorithm, and SAC was trained for fewer steps,
 so this is not a claim about which algorithm is better in general.
+
+## Robustness to pushes
+
+How well does the learned gait survive random horizontal pushes to the torso?
+
+| Before (trained without pushes) | After (trained with pushes) |
+| --- | --- |
+| ![before](videos/push_before.gif) | ![after](videos/push_after.gif) |
+
+Red bar = a push is being applied (150 N for 0.04 s).
+
+Fall rate over 20 episodes, pushes on average every 200 steps:
+
+| Push force | Control (seed=0) | Control (seed=1) | Trained with pushes (seed=0) | Trained with pushes (seed=1) |
+| --- | --- | --- | --- | --- |
+| 0 N | 0/20 | 20/20 | 0/20 | 11/20 |
+| 100 N | 3/20 | 20/20 | 6/20 | 12/20 |
+| 150 N | 9/20 | 20/20 | 13/20 | 12/20 |
+| 200 N | 12/20 | 20/20 | 16/20 | 12/20 |
+| 400 N | 17/20 | 20/20 | 18/20 | 17/20 |
+
+Both groups: PPO + normalization, 4 envs, 2M steps. The push-trained policies
+saw 150 N pushes on average every 50 steps during training.
+
+**What I learned**
+- Training with pushes don't make the robot more robust, it actually made it worse
+- Training with different seeds is important, in a lot of cases one seed underperforms
+- Maybe if I experiment with more seeds and different parameters, I can make improve the robustness
+
+Limitations: only one disturbance type was tested, and only 2 control seeds.

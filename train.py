@@ -5,6 +5,7 @@ from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.callbacks import BaseCallback, EvalCallback
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecNormalize
+from wrappers import PushWrapper
 
 # Az RL Baselines3 Zoo hangolt PPO-beállításai a Walker2d-hez
 ZOO_PARAMS = dict(
@@ -44,10 +45,14 @@ parser.add_argument("--normalize", action="store_true", help="megfigyelések és
 parser.add_argument("--zoo", action="store_true", help="az RL Zoo hangolt hiperparaméterei")
 parser.add_argument("--algo", default="ppo", choices=["ppo", "sac"], help="melyik algoritmus tanítson")
 parser.add_argument("--eval-freq", type=int, default=50_000, help="hány lépésenként legyen kiértékelés")
+parser.add_argument("--push", type=float, default=0, help="tanítás közbeni lökések ereje newtonban (0 = nincs)")
+parser.add_argument("--push-interval", type=int, default=200, help="átlagosan hány lépésenként jöjjön lökés")
 args = parser.parse_args()
 
 # Tanító környezet: n_envs darab párhuzamos példány
-env = make_vec_env(args.env, n_envs=args.n_envs, seed=args.seed)
+# Ha kértünk lökéseket, minden tanító környezet PushWrapperbe kerül
+push = dict(wrapper_class=PushWrapper, wrapper_kwargs=dict(force=args.push, interval=args.push_interval)) if args.push > 0 else {}
+env = make_vec_env(args.env, n_envs=args.n_envs, seed=args.seed, **push)
 # Külön kiértékelő környezet: ezen mérjük tanítás közben a modellt
 eval_env = make_vec_env(args.env, n_envs=1, seed=args.seed + 1000)
 
